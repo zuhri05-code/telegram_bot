@@ -1,0 +1,51 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, ContextTypes,
+    MessageHandler, filters, CallbackQueryHandler
+)
+import os
+
+TOKEN = os.getenv("BOT_TOKEN")  # ambil dari Environment Variable
+
+# Fungsi /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Kirim Foto URL", callback_data='url')],
+        [InlineKeyboardButton("Info Bot", callback_data='info')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "Halo! Aku bot interaktifmu 😎\nPilih tombol di bawah:",
+        reply_markup=reply_markup
+    )
+
+# Fungsi tombol
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == 'url':
+        url = "https://picsum.photos/400"  # random photo API
+        await query.message.reply_photo(photo=url)
+    elif query.data == 'info':
+        await query.message.reply_text("Ini contoh bot di server online gratis 🚀")
+
+# Fungsi echo
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"Kamu ngetik: {update.message.text}")
+
+# Fungsi /help
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Gunakan /start untuk tombol interaktif.")
+
+# Main program
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    app.add_handler(CallbackQueryHandler(button))
+
+    print("Bot berjalan di server 🚀")
+    app.run_polling()
